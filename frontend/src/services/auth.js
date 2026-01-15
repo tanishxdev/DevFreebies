@@ -1,11 +1,7 @@
+// src/services/auth.js
 import api from "./api";
 
-/**
- * Authentication service
- * Handles all authentication-related API calls
- */
-
-// Register new user
+// Register user
 export const register = async (userData) => {
   const response = await api.post("/auth/register", userData);
   return response;
@@ -21,9 +17,4 @@ export const login = async (credentials) => {
 export const getCurrentUser = async () => {
   const response = await api.get("/auth/me");
   return response;
-};
-
-// Check if user is authenticated
-export const isAuthenticated = () => {
-  return !!localStorage.getItem("token");
 };

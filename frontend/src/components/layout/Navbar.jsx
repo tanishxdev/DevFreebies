@@ -1,178 +1,248 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { FiMenu, FiMoon, FiSun, FiX } from "react-icons/fi";
-import { useLocation, useNavigate } from "react-router-dom";
+// src/components/layout/Navbar.jsx
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiHome,
+  FiGrid,
+  FiPlusCircle,
+  FiBookmark,
+  FiUser,
+  FiMenu,
+  FiX,
+  FiShield,
+  FiSun,
+  FiMoon,
+  FiLogOut,
+  FiLogIn,
+  FiUserPlus,
+} from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../ui/Button";
 
-const Navbar = () => {
+const Navbar = ({ isScrolled }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  const dropdownRef = useRef(null);
-  const { isAuthenticated, user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
-  const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  const navLinks = isAuthenticated
-    ? [
-        { name: "Resources", path: "/resources" },
-        { name: "Submit", path: "/submit" },
-        { name: "Dashboard", path: "/dashboard" },
-      ]
-    : [
-        { name: "Home", path: "/" },
-        { name: "Features", hash: "features" },
-        { name: "Resources", path: "/resources" },
-        { name: "FAQ", path: "/faq" },
-      ];
+  const navLinks = [
+    { name: "Home", path: "/", icon: FiHome },
+    { name: "Resources", path: "/resources", icon: FiGrid },
+    ...(isAuthenticated
+      ? [
+          { name: "Submit", path: "/submit", icon: FiPlusCircle },
+          { name: "Bookmarks", path: "/bookmarks", icon: FiBookmark },
+        ]
+      : []),
+  ];
 
-  useEffect(() => {
+  const handleLogout = () => {
+    logout();
     setMobileMenuOpen(false);
-    setUserMenuOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-    if (userMenuOpen) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [userMenuOpen]);
-
-  const handleNavClick = (link) => {
-    setMobileMenuOpen(false);
-
-    if (link.path === "/") {
-      navigate("/");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    if (link.hash) {
-      if (location.pathname !== "/") {
-        navigate("/");
-        setTimeout(() => {
-          document
-            .getElementById(link.hash)
-            ?.scrollIntoView({ behavior: "smooth" });
-        }, 300);
-      } else {
-        document
-          .getElementById(link.hash)
-          ?.scrollIntoView({ behavior: "smooth" });
-      }
-      return;
-    }
-
-    navigate(link.path);
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border">
-      <div className="max-w-7xl mx-auto px-5">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <button
-            onClick={() => handleNavClick({ path: "/" })}
-            className="flex items-center gap-3"
-          >
-            <div className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center">
-              <span className="text-brand-foreground font-bold text-lg">D</span>
-            </div>
-            <span className="text-lg font-semibold text-text">DevFreebies</span>
-          </button>
-
-          {/* Center nav */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <button
-                key={link.name}
-                onClick={() => handleNavClick(link)}
-                className={`text-sm transition ${
-                  location.pathname === link.path
-                    ? "text-brand"
-                    : "text-text-soft hover:text-text"
-                }`}
-              >
-                {link.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Right side */}
-          <div className="hidden md:flex items-center gap-3">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-bg-soft border border-border text-text"
-            >
-              {isDark ? <FiSun /> : <FiMoon />}
-            </motion.button>
-
-            {isAuthenticated ? (
-              <div className="relative">
-                <button onClick={() => setUserMenuOpen((p) => !p)}>
-                  <img
-                    src={user?.avatar}
-                    alt="avatar"
-                    className="w-9 h-9 rounded-full ring-2 ring-brand/40"
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {userMenuOpen && (
-                    <motion.div
-                      ref={dropdownRef}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className="absolute right-0 mt-3 w-48 rounded-xl bg-surface border border-border shadow-soft overflow-hidden"
-                    >
-                      <button
-                        onClick={logout}
-                        className="w-full px-4 py-3 text-left text-danger hover:bg-bg-soft"
-                      >
-                        Logout
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+    <>
+      <motion.nav
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+          isScrolled
+            ? "bg-bg/80 backdrop-blur-lg border-b border-border"
+            : "bg-bg"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-brand-soft flex items-center justify-center">
+                <span className="text-brand-foreground font-bold text-lg">
+                  DF
+                </span>
               </div>
-            ) : (
-              <>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => navigate("/login")}
-                >
-                  Login
-                </Button>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={() => navigate("/register")}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </div>
+              <div>
+                <h1 className="text-lg font-semibold text-text">DevFreebies</h1>
+                <p className="text-xs text-text-soft">For Developers</p>
+              </div>
+            </Link>
 
-          {/* Mobile toggle */}
-          <button
-            onClick={() => setMobileMenuOpen((p) => !p)}
-            className="md:hidden p-2 rounded-lg bg-bg-soft"
-          >
-            {mobileMenuOpen ? <FiX /> : <FiMenu />}
-          </button>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-text-soft hover:text-text hover:bg-bg-soft transition-colors"
+                >
+                  <link.icon className="w-4 h-4" />
+                  {link.name}
+                </Link>
+              ))}
+
+              {/* Admin Link - Only for admins */}
+              {isAuthenticated && user?.role === "admin" && (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-brand hover:bg-brand/10 transition-colors"
+                >
+                  <FiShield className="w-4 h-4" />
+                  Admin
+                </Link>
+              )}
+            </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-2">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg hover:bg-bg-soft transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? (
+                  <FiSun className="w-5 h-5 text-text" />
+                ) : (
+                  <FiMoon className="w-5 h-5 text-text" />
+                )}
+              </button>
+
+              {/* Auth Buttons / User Menu */}
+              <div className="hidden md:flex items-center gap-2">
+                {isAuthenticated ? (
+                  <div className="flex items-center gap-2">
+                    <Link to="/profile">
+                      <Button variant="ghost" size="sm">
+                        <FiUser className="w-4 h-4" />
+                        {user.username}
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="text-danger"
+                    >
+                      <FiLogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Link to="/login">
+                      <Button variant="ghost" size="sm">
+                        <FiLogIn className="w-4 h-4" />
+                        Login
+                      </Button>
+                    </Link>
+                    <Link to="/register">
+                      <Button variant="primary" size="sm">
+                        <FiUserPlus className="w-4 h-4" />
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-bg-soft transition-colors"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <FiX className="w-6 h-6 text-text" />
+                ) : (
+                  <FiMenu className="w-6 h-6 text-text" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </nav>
+      </motion.nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-surface border-b border-border overflow-hidden"
+          >
+            <div className="px-4 py-6 space-y-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-text hover:bg-bg-soft transition-colors"
+                >
+                  <link.icon className="w-5 h-5" />
+                  {link.name}
+                </Link>
+              ))}
+
+              {/* Admin Link */}
+              {isAuthenticated && user?.role === "admin" && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-brand hover:bg-brand/10 transition-colors"
+                >
+                  <FiShield className="w-5 h-5" />
+                  Admin Dashboard
+                </Link>
+              )}
+
+              {/* Auth Section */}
+              <div className="pt-4 border-t border-border">
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-text hover:bg-bg-soft transition-colors mb-2"
+                    >
+                      <FiUser className="w-5 h-5" />
+                      Profile ({user.username})
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-danger hover:bg-danger/10 transition-colors w-full"
+                    >
+                      <FiLogOut className="w-5 h-5" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-text hover:bg-bg-soft transition-colors mb-2"
+                    >
+                      <FiLogIn className="w-5 h-5" />
+                      Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg bg-brand text-brand-foreground hover:bg-brand/90 transition-colors"
+                    >
+                      <FiUserPlus className="w-5 h-5" />
+                      Sign Up Free
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

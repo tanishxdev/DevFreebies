@@ -1,209 +1,434 @@
+// src/components/pages/Resources.jsx
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { FiSearch } from "react-icons/fi";
+import toast from "react-hot-toast";
+import {
+  FiChevronDown,
+  FiFilter,
+  FiGrid,
+  FiList,
+  FiSearch,
+  FiX,
+} from "react-icons/fi";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import * as resourcesService from "../../services/resources";
+import * as userService from "../../services/users";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-
-/*
-  DevFreebies Resources
-  - Token based
-  - Dark / light safe
-  - SaaS UI
-*/
+import Input from "../ui/Input";
 
 const Resources = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
   const [resources, setResources] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [upvotedResources, setUpvotedResources] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: "",
-    category: "",
-    sort: "-createdAt",
-  });
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    total: 0,
-  });
+  const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get query params
+  const search = searchParams.get("search") || "";
+  const category = searchParams.get("category") || "";
+  const sort = searchParams.get("sort") || "-createdAt";
+  const page = parseInt(searchParams.get("page") || "1");
 
   useEffect(() => {
-    fetchResources();
-  }, [filters, pagination.currentPage]);
+    fetchData();
+  }, [search, category, sort, page]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchResources = async () => {
-    setLoading(true);
+  const fetchData = async () => {
     try {
-      const params = {
-        page: pagination.currentPage,
-        ...filters,
-      };
-      Object.keys(params).forEach((k) => params[k] === "" && delete params[k]);
+      setLoading(true);
 
-      const res = await resourcesService.getResources(params);
-      setResources(res.data || []);
-      setPagination({
-        currentPage: res.currentPage,
-        totalPages: res.totalPages,
-        total: res.total,
+      // Fetch resources
+      const resourcesRes = await resourcesService.getResources({
+        search,
+        category,
+        sort,
+        page,
+        limit: 12,
       });
-    } catch (e) {
-      console.error(e);
+
+      setResources(resourcesRes.data || []);
+      setTotal(resourcesRes.total || 0);
+
+      // Fetch categories if not already loaded
+      if (categories.length === 0) {
+        const categoriesRes = await resourcesService.getCategories();
+        setCategories(categoriesRes.data || []);
+      }
+
+      // Fetch bookmarks if authenticated
+      if (isAuthenticated) {
+        try {
+          const bookmarksRes = await userService.getBookmarks();
+          setBookmarks(bookmarksRes.data?.map((r) => r._id) || []);
+
+          // Get upvoted resources from user data
+          if (user) {
+            setUpvotedResources(user.upvotedResources || []);
+          }
+        } catch (error) {
+          console.error("Error fetching bookmarks:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+      toast.error("Failed to load resources");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCategories = async () => {
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newSearch = formData.get("search");
+
+    const params = new URLSearchParams(searchParams);
+    if (newSearch) {
+      params.set("search", newSearch);
+    } else {
+      params.delete("search");
+    }
+    params.set("page", "1");
+    setSearchParams(params);
+  };
+
+  const handleCategoryChange = (newCategory) => {
+    const params = new URLSearchParams(searchParams);
+    if (newCategory) {
+      params.set("category", newCategory);
+    } else {
+      params.delete("category");
+    }
+    params.set("page", "1");
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (newSort) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("sort", newSort);
+    setSearchParams(params);
+  };
+
+  const handleUpvote = async (resourceId) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      const res = await resourcesService.getCategories();
-      setCategories(res.data || []);
-    } catch (e) {
-      console.error(e);
+      await resourcesService.upvoteResource(resourceId);
+
+      // Update local state optimistically
+      setResources((prev) =>
+        prev.map((resource) => {
+          if (resource._id === resourceId) {
+            const wasUpvoted = upvotedResources.includes(resourceId);
+            return {
+              ...resource,
+              upvotes: wasUpvoted ? resource.upvotes - 1 : resource.upvotes + 1,
+            };
+          }
+          return resource;
+        })
+      );
+
+      // Update upvoted resources list
+      if (upvotedResources.includes(resourceId)) {
+        setUpvotedResources((prev) => prev.filter((id) => id !== resourceId));
+      } else {
+        setUpvotedResources((prev) => [...prev, resourceId]);
+      }
+    } catch (error) {
+      toast.error("Failed to upvote resource");
     }
   };
 
-  const handleFilterChange = (k, v) => {
-    setFilters({ ...filters, [k]: v });
-    setPagination({ ...pagination, currentPage: 1 });
+  const handleBookmark = async (resourceId) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await userService.toggleBookmark(resourceId);
+
+      // Update local state
+      if (bookmarks.includes(resourceId)) {
+        setBookmarks((prev) => prev.filter((id) => id !== resourceId));
+        toast.success("Bookmark removed");
+      } else {
+        setBookmarks((prev) => [...prev, resourceId]);
+        toast.success("Bookmark added");
+      }
+    } catch (error) {
+      toast.error("Failed to update bookmark");
+    }
   };
 
-  const handlePageChange = (p) => {
-    setPagination({ ...pagination, currentPage: p });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const clearFilters = () => {
+    setSearchParams({});
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        {/* Header */}
-        <div className="mb-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+    <div className="min-h-screen bg-bg">
+      {/* Header */}
+      <div className="bg-gradient-to-b from-bg-soft to-bg border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-4xl font-semibold mb-3"
           >
-            Discover developer tools
-          </motion.h1>
-          <p className="text-text-soft">
-            Browse {pagination.total}+ curated free resources
-          </p>
+            <h1 className="text-4xl font-semibold text-text mb-4">
+              Discover Resources
+            </h1>
+            <p className="text-lg text-text-soft mb-8">
+              Browse {total} free tools, APIs, libraries and resources for
+              developers
+            </p>
+
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="max-w-2xl mb-6">
+              <div className="relative">
+                <Input
+                  name="search"
+                  placeholder="Search resources by name, description..."
+                  defaultValue={search}
+                  className="pl-12 pr-12 py-3 text-lg"
+                />
+                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-soft w-5 h-5" />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams(searchParams);
+                      params.delete("search");
+                      setSearchParams(params);
+                    }}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-text-soft hover:text-text"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* Filter Toggle */}
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => setShowFilters(!showFilters)}
+                icon={showFilters ? <FiX /> : <FiFilter />}
+              >
+                {showFilters ? "Hide Filters" : "Show Filters"}
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-soft">View:</span>
+                <Button
+                  variant={viewMode === "grid" ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  icon={<FiGrid />}
+                />
+                <Button
+                  variant={viewMode === "list" ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  icon={<FiList />}
+                />
+              </div>
+            </div>
+          </motion.div>
         </div>
+      </div>
 
-        {/* Search & sort */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1 relative">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-text-soft" />
-            <input
-              value={filters.search}
-              onChange={(e) =>
-                setFilters({ ...filters, search: e.target.value })
-              }
-              placeholder="Search tools, APIs, templates..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface border border-border text-text placeholder-text-soft focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-          </div>
-
-          <select
-            value={filters.sort}
-            onChange={(e) => handleFilterChange("sort", e.target.value)}
-            className="px-4 py-3 rounded-xl bg-surface border border-border text-text focus:outline-none"
+      {/* Filters Panel */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-surface border-b border-border overflow-hidden"
           >
-            <option value="-createdAt">Newest</option>
-            <option value="-upvotes">Most Upvoted</option>
-            <option value="-visits">Most Visited</option>
-          </select>
-        </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="flex flex-wrap gap-4 items-center">
+                {/* Category Filter */}
+                <div className="relative">
+                  <select
+                    value={category}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="appearance-none bg-bg-soft border border-border rounded-xl pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-transparent"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.name} value={cat.name}>
+                        {cat.name} ({cat.count})
+                      </option>
+                    ))}
+                  </select>
+                  <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-soft w-4 h-4" />
+                </div>
 
-        {/* Categories */}
-        <div className="flex flex-wrap gap-2 mb-12">
-          <button
-            onClick={() => handleFilterChange("category", "")}
-            className={`px-4 py-2 rounded-full text-sm transition ${
-              filters.category === ""
-                ? "bg-brand text-brand-foreground"
-                : "bg-bg-soft text-text-soft hover:text-text"
-            }`}
-          >
-            All
-          </button>
-          {categories.map((c) => (
-            <button
-              key={c.name}
-              onClick={() => handleFilterChange("category", c.name)}
-              className={`px-4 py-2 rounded-full text-sm transition ${
-                filters.category === c.name
-                  ? "bg-brand text-brand-foreground"
-                  : "bg-bg-soft text-text-soft hover:text-text"
-              }`}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
+                {/* Sort Options */}
+                <div className="relative">
+                  <select
+                    value={sort}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="appearance-none bg-bg-soft border border-border rounded-xl pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-transparent"
+                  >
+                    <option value="-createdAt">Newest First</option>
+                    <option value="createdAt">Oldest First</option>
+                    <option value="-upvotes">Most Upvoted</option>
+                    <option value="upvotes">Least Upvoted</option>
+                    <option value="title">Title A-Z</option>
+                    <option value="-title">Title Z-A</option>
+                  </select>
+                  <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-soft w-4 h-4" />
+                </div>
 
-        {/* Grid */}
+                {/* Active Filters Display */}
+                {(search || category) && (
+                  <div className="flex items-center gap-2 ml-4">
+                    <span className="text-sm text-text-soft">Active:</span>
+                    {search && (
+                      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand/10 text-brand text-sm">
+                        Search: {search}
+                        <button
+                          onClick={() => {
+                            const params = new URLSearchParams(searchParams);
+                            params.delete("search");
+                            setSearchParams(params);
+                          }}
+                          className="ml-1 hover:text-brand/80"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {category && (
+                      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand/10 text-brand text-sm">
+                        Category: {category}
+                        <button
+                          onClick={() => handleCategoryChange("")}
+                          className="ml-1 hover:text-brand/80"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={clearFilters}>
+                      Clear all
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(9)].map((_, i) => (
-              <div
-                key={i}
-                className="h-80 rounded-2xl bg-bg-soft animate-pulse"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-surface rounded-2xl p-6 animate-pulse">
+                <div className="h-4 bg-bg rounded w-1/4 mb-4"></div>
+                <div className="h-6 bg-bg rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-bg rounded w-1/2 mb-4"></div>
+                <div className="h-8 bg-bg rounded"></div>
+              </div>
             ))}
           </div>
-        ) : (
+        ) : resources.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {resources.map((r) => (
-                <Card key={r._id} resource={r} onUpdate={fetchResources} />
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  : "space-y-6"
+              }
+            >
+              {resources.map((resource) => (
+                <Card
+                  key={resource._id}
+                  resource={resource}
+                  onUpvote={handleUpvote}
+                  onBookmark={handleBookmark}
+                  isBookmarked={bookmarks.includes(resource._id)}
+                  upvoted={upvotedResources.includes(resource._id)}
+                />
               ))}
             </div>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-3 mt-16">
+            {/* Pagination */}
+            {total > 12 && (
+              <div className="flex items-center justify-center gap-2 mt-12">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.currentPage === 1}
-                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  variant="ghost"
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.set("page", Math.max(1, page - 1).toString());
+                    setSearchParams(params);
+                  }}
+                  disabled={page <= 1}
                 >
-                  Prev
+                  Previous
                 </Button>
-
-                {[...Array(pagination.totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handlePageChange(i + 1)}
-                    className={`px-4 py-2 rounded-lg text-sm ${
-                      pagination.currentPage === i + 1
-                        ? "bg-brand text-brand-foreground"
-                        : "bg-bg-soft text-text-soft hover:text-text"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-
+                <span className="text-sm text-text-soft">
+                  Page {page} of {Math.ceil(total / 12)}
+                </span>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.currentPage === pagination.totalPages}
-                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  variant="ghost"
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.set("page", (page + 1).toString());
+                    setSearchParams(params);
+                  }}
+                  disabled={page >= Math.ceil(total / 12)}
                 >
                   Next
                 </Button>
               </div>
             )}
           </>
+        ) : (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-2xl font-semibold text-text mb-2">
+              No resources found
+            </h3>
+            <p className="text-text-soft mb-6">
+              {search || category
+                ? "Try adjusting your search or filters"
+                : "Be the first to submit a resource!"}
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <Button onClick={clearFilters}>Clear Filters</Button>
+              {isAuthenticated && (
+                <Button variant="primary" onClick={() => navigate("/submit")}>
+                  Submit Resource
+                </Button>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 };
+
+// AnimatePresence component for motion
+const AnimatePresence = ({ children }) => children;
 
 export default Resources;

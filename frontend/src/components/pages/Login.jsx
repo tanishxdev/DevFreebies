@@ -1,111 +1,176 @@
+// src/components/pages/Login.jsx
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { FiLock, FiMail } from "react-icons/fi";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import Button from "../ui/Button";
+import { FiMail, FiLock, FiGithub, FiTwitter } from "react-icons/fi";
 import Input from "../ui/Input";
-
-/*
-  DevFreebies Login
-  - Uses design tokens
-  - Supports redirect after login
-  - Works in dark & light
-*/
+import Button from "../ui/Button";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
-  const { login, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
-
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (isAuthenticated) navigate(redirect);
-  }, [isAuthenticated, redirect, navigate]);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const from = location.state?.from?.pathname || "/";
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) setError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const result = await login(formData);
-    if (!result.success) setLoading(false);
+    setError("");
+
+    try {
+      const result = await login(formData);
+      if (result.success) {
+        navigate(from, { replace: true });
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-6">
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-surface border border-border rounded-2xl p-10 shadow-soft">
-          <h2 className="text-2xl font-semibold text-text mb-2">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-block mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand to-brand-soft flex items-center justify-center mx-auto">
+              <span className="text-brand-foreground font-bold text-2xl">
+                DF
+              </span>
+            </div>
+          </Link>
+          <h1 className="text-3xl font-semibold text-text mb-2">
             Welcome back
-          </h2>
-          <p className="text-text-soft mb-8">
-            Sign in to continue to DevFreebies
-          </p>
+          </h1>
+          <p className="text-text-soft">Sign in to your account</p>
+        </div>
+
+        <div className="bg-surface border border-border rounded-2xl p-8">
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Email"
+              label="Email Address"
               name="email"
               type="email"
+              placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@company.com"
-              icon={<FiMail />}
               required
+              icon={<FiMail className="w-5 h-5" />}
+              disabled={loading}
             />
 
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Your password"
-              icon={<FiLock />}
-              required
-            />
-
-            <div className="flex justify-between text-sm">
-              <label className="flex items-center gap-2 text-text-soft">
-                <input type="checkbox" className="accent-brand" />
-                Remember me
-              </label>
-
-              <Link
-                to="/forgot-password"
-                className="text-brand hover:opacity-80"
-              >
-                Forgot password?
-              </Link>
+            <div>
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                icon={<FiLock className="w-5 h-5" />}
+                disabled={loading}
+              />
+              <div className="text-right mt-2">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-brand hover:text-brand/80"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <Button
               type="submit"
+              variant="primary"
               size="lg"
               className="w-full"
               loading={loading}
+              disabled={loading}
             >
-              Sign in
+              Sign In
             </Button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-surface text-text-soft">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="secondary"
+                icon={<FiGithub className="w-5 h-5" />}
+                disabled={loading}
+              >
+                GitHub
+              </Button>
+              <Button
+                variant="secondary"
+                icon={<FiTwitter className="w-5 h-5" />}
+                disabled={loading}
+              >
+                Twitter
+              </Button>
+            </div>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-border text-center">
-            <p className="text-sm text-text-soft">
-              Don’t have an account?{" "}
-              <Link to="/register" className="text-brand hover:opacity-80">
-                Create one
+          <div className="mt-8 text-center">
+            <p className="text-text-soft">
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="text-brand font-medium hover:text-brand/80"
+              >
+                Sign up for free
               </Link>
             </p>
           </div>
+        </div>
+
+        <div className="mt-8 text-center text-sm text-text-soft">
+          By signing in, you agree to our{" "}
+          <Link to="/terms" className="text-brand hover:text-brand/80">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link to="/policy" className="text-brand hover:text-brand/80">
+            Privacy Policy
+          </Link>
         </div>
       </motion.div>
     </div>
