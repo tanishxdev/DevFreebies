@@ -1,186 +1,151 @@
+// src/components/ui/Card.jsx
 import { motion } from "framer-motion";
-import { useState } from "react";
-import toast from "react-hot-toast";
-import { BiUpvote } from "react-icons/bi";
-import { FiArrowUpRight, FiBookmark, FiEye } from "react-icons/fi";
+import {
+  FiBookmark,
+  FiCheckCircle,
+  FiExternalLink,
+  FiHeart,
+  FiStar,
+} from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import * as resourcesService from "../../services/resources";
-import * as usersService from "../../services/users";
 
-/* ---------- Gradient System ---------- */
-const getGradient = (text) => {
-  let hash = 0;
-
-  for (let i = 0; i < text.length; i++) {
-    hash = text.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  const hue = (Math.abs(hash) % 40) + 140;
-
-  return {
-    from: `hsl(${hue}, 70%, 35%)`,
-    to: `hsl(${hue + 12}, 80%, 20%)`,
-  };
-};
-
-/* ---------- Image Resolver ---------- */
-const getImage = (resource) => {
-  if (resource.image && resource.image.trim() !== "") {
-    return resource.image;
-  }
-  return null;
-};
-
-/* ---------- Card Component ---------- */
-const Card = ({ resource, onUpdate }) => {
-  const { isAuthenticated } = useAuth();
-  const [upvoted, setUpvoted] = useState(false);
-  const [upvotes, setUpvotes] = useState(resource.upvotes || 0);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
-  const handleUpvote = async (e) => {
-    e.preventDefault();
-    if (!isAuthenticated) return toast.error("Login required");
-
-    try {
-      const res = await resourcesService.upvoteResource(resource._id);
-      setUpvoted(res.data.upvoted);
-      setUpvotes(res.data.upvotes);
-      if (onUpdate) onUpdate();
-    } catch {
-      toast.error("Failed to upvote");
-    }
-  };
-
-  const handleBookmark = async (e) => {
-    e.preventDefault();
-    if (!isAuthenticated) return toast.error("Login required");
-
-    try {
-      const res = await usersService.toggleBookmark(resource._id);
-      setBookmarked(res.bookmarked);
-      toast.success(res.message);
-    } catch {
-      toast.error("Failed to bookmark");
-    }
-  };
-
-  const imageUrl = getImage(resource);
-  const showGradient = !imageUrl || imageError;
-  const gradient = getGradient(resource.title);
+const Card = ({
+  resource,
+  onUpvote,
+  onBookmark,
+  isBookmarked: initialBookmarked,
+  upvoted: initialUpvoted,
+  showActions = true,
+}) => {
+  const isBookmarked = initialBookmarked || false;
+  const isUpvoted = initialUpvoted || false;
 
   return (
     <motion.div
-      whileHover={{ y: -6 }}
-      className="group relative rounded-2xl bg-surface border border-border hover:border-brand/40 transition overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      className="group relative bg-surface border border-border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg"
     >
+      {/* Featured badge */}
       {resource.isFeatured && (
-        <div className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-brand-soft text-brand z-10">
-          Featured
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-xs font-medium text-white">
+            <FiStar className="w-3 h-3" />
+            Featured
+          </div>
         </div>
       )}
 
-      <Link to={`/resources/${resource._id}`}>
-        {/* Image / Gradient */}
-        <div className="h-32 overflow-hidden relative">
-          {showGradient ? (
-            <div
-              className="w-full h-full"
-              style={{
-                background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
-              }}
-            />
-          ) : (
-            <img
-              src={imageUrl}
-              alt={resource.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition"
-              onError={() => setImageError(true)}
-            />
-          )}
+      {/* Verified badge */}
+      {resource.isVerified && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-success/20 text-success text-xs font-medium">
+            <FiCheckCircle className="w-3 h-3" />
+            Verified
+          </div>
         </div>
+      )}
 
-        {/* Content */}
-        <div className="p-4">
-          {/* Category */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs px-2 py-0.5 rounded-full bg-brand-soft text-brand">
+      <div className="p-6">
+        {/* Header with domain */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {resource.metadata?.domain && (
+              <div className="text-xs text-text-soft bg-bg-soft px-2 py-1 rounded-lg">
+                {resource.metadata.domain}
+              </div>
+            )}
+            <span className="text-xs px-2 py-1 rounded-lg bg-brand/10 text-brand">
               {resource.category}
             </span>
-            {resource.isVerified && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-bg-soft text-text-soft">
-                Verified
+          </div>
+        </div>
+
+        {/* Title and description */}
+        <Link to={`/resources/${resource._id}`}>
+          <h3 className="text-lg font-semibold text-text mb-2 group-hover:text-brand transition-colors">
+            {resource.title}
+          </h3>
+        </Link>
+        <p className="text-sm text-text-soft mb-4 line-clamp-2">
+          {resource.description}
+        </p>
+
+        {/* Tags */}
+        {resource.tags && resource.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {resource.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="text-xs px-2 py-1 rounded-lg bg-bg-soft text-text-soft"
+              >
+                {tag}
+              </span>
+            ))}
+            {resource.tags.length > 3 && (
+              <span className="text-xs px-2 py-1 rounded-lg bg-bg-soft text-text-soft">
+                +{resource.tags.length - 3}
               </span>
             )}
           </div>
+        )}
 
-          {/* Title */}
-          <h3 className="text-base font-medium text-text mb-1 line-clamp-1">
-            {resource.title}
-          </h3>
-
-          {/* Description */}
-          <p className="text-sm text-text-soft line-clamp-2 mb-3">
-            {resource.description}
-          </p>
-
-          {/* Tags */}
-          {resource.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {resource.tags.slice(0, 3).map((tag, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2 py-0.5 bg-bg-soft text-text-soft rounded"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-border pt-3">
-            <div className="flex items-center gap-4 text-text-soft text-sm">
-              <div className="flex items-center gap-1">
-                <BiUpvote /> {upvotes}
-              </div>
-              <div className="flex items-center gap-1">
-                <FiEye /> {resource.visits || 0}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
+        {/* Footer with actions and metadata */}
+        <div className="flex items-center justify-between pt-4 border-t border-border">
+          <div className="flex items-center gap-4">
+            {/* Upvotes */}
+            {showActions && onUpvote && (
               <button
-                onClick={handleUpvote}
-                className={`p-1.5 rounded-md transition ${
-                  upvoted
-                    ? "bg-brand-soft text-brand"
-                    : "hover:bg-bg-soft text-text-soft"
+                onClick={() => onUpvote(resource._id)}
+                className={`flex items-center gap-1.5 text-sm transition-colors ${
+                  isUpvoted ? "text-brand" : "text-text-soft hover:text-brand"
                 }`}
               >
-                <BiUpvote />
+                <FiHeart
+                  className={`w-4 h-4 transition-transform ${
+                    isUpvoted ? "fill-current" : ""
+                  }`}
+                />
+                <span>{resource.upvotes || 0}</span>
               </button>
+            )}
 
+            {/* Bookmark */}
+            {showActions && onBookmark && (
               <button
-                onClick={handleBookmark}
-                className={`p-1.5 rounded-md transition ${
-                  bookmarked
-                    ? "bg-warning/20 text-warning"
-                    : "hover:bg-bg-soft text-text-soft"
+                onClick={() => onBookmark(resource._id)}
+                className={`text-sm transition-colors ${
+                  isBookmarked
+                    ? "text-brand"
+                    : "text-text-soft hover:text-brand"
                 }`}
               >
-                <FiBookmark />
+                <FiBookmark
+                  className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`}
+                />
               </button>
+            )}
 
-              <div className="p-1.5 rounded-md hover:bg-bg-soft text-text-soft">
-                <FiArrowUpRight />
+            {/* Submitted by */}
+            {resource.submittedBy && (
+              <div className="text-xs text-text-soft">
+                By {resource.submittedBy.username}
               </div>
-            </div>
+            )}
           </div>
+
+          {/* External link */}
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-brand hover:text-brand/80 transition-colors"
+          >
+            <FiExternalLink className="w-4 h-4" />
+          </a>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 };

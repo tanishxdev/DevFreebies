@@ -1,62 +1,76 @@
+// src/components/ui/Button.jsx
 import { motion } from "framer-motion";
+import { forwardRef } from "react";
 
-/*
-  DevFreebies Button
-  Uses design tokens instead of hardcoded colors
-  Works in dark & light automatically
-*/
+const Button = forwardRef(
+  (
+    {
+      children,
+      variant = "primary",
+      size = "md",
+      icon,
+      iconPosition = "left",
+      loading = false,
+      disabled = false,
+      className = "",
+      ...props
+    },
+    ref
+  ) => {
+    const baseStyles =
+      "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand/50 disabled:opacity-50 disabled:cursor-not-allowed";
 
-const Button = ({
-  children,
-  variant = "primary",
-  size = "md",
-  loading = false,
-  disabled = false,
-  className = "",
-  icon,
-  iconPosition = "left",
-  ...props
-}) => {
-  const base =
-    "inline-flex items-center justify-center rounded-lg font-medium transition focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+    const variants = {
+      primary:
+        "bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.98]",
+      secondary:
+        "bg-bg-soft text-text hover:bg-bg hover:border-border border border-border",
+      outline:
+        "border-2 border-brand text-brand hover:bg-brand/10 active:scale-[0.98]",
+      ghost:
+        "text-text-soft hover:text-text hover:bg-bg-soft active:scale-[0.98]",
+      danger: "bg-danger text-white hover:bg-danger/90 active:scale-[0.98]",
+      success: "bg-success text-white hover:bg-success/90 active:scale-[0.98]",
+    };
 
-  const variants = {
-    primary: "bg-brand text-brand-foreground hover:opacity-90 shadow-soft",
-    secondary: "bg-surface text-text border border-border hover:bg-bg-soft",
-    outline: "border border-border text-text hover:bg-bg-soft",
-    ghost: "text-text-soft hover:text-text hover:bg-bg-soft",
-    danger: "bg-danger text-white hover:opacity-90",
-  };
+    const sizes = {
+      sm: "px-3 py-1.5 text-sm gap-1.5",
+      md: "px-4 py-2.5 text-sm gap-2",
+      lg: "px-6 py-3 text-base gap-2.5",
+    };
 
-  const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
-  };
+    const iconSizes = {
+      sm: "w-4 h-4",
+      md: "w-5 h-5",
+      lg: "w-6 h-6",
+    };
 
-  return (
-    <motion.button
-      type={props.type || "button"}
-      whileHover={{ scale: disabled || loading ? 1 : 1.04 }}
-      whileTap={{ scale: disabled || loading ? 1 : 0.96 }}
-      disabled={disabled || loading}
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {loading ? (
-        <div className="flex items-center gap-2">
-          <span className="w-4 h-4 border-2 border-text/40 border-t-transparent rounded-full animate-spin" />
-          Loading
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          {icon && iconPosition === "left" && icon}
-          {children}
-          {icon && iconPosition === "right" && icon}
-        </div>
-      )}
-    </motion.button>
-  );
-};
+    return (
+      <motion.button
+        ref={ref}
+        whileTap={{ scale: disabled ? 1 : 0.98 }}
+        className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading ? (
+          <div className="animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <>
+            {icon && iconPosition === "left" && (
+              <span className={iconSizes[size]}>{icon}</span>
+            )}
+            {children}
+            {icon && iconPosition === "right" && (
+              <span className={iconSizes[size]}>{icon}</span>
+            )}
+          </>
+        )}
+      </motion.button>
+    );
+  }
+);
+
+Button.displayName = "Button";
 
 export default Button;

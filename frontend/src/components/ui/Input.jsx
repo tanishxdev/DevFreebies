@@ -1,62 +1,64 @@
+// src/components/ui/Input.jsx
 import { forwardRef } from "react";
-
-/*
-  DevFreebies Input
-  Uses design tokens so it matches:
-  - dark / light
-  - brand color
-  - surface system
-*/
+import { motion } from "framer-motion";
 
 const Input = forwardRef(
-  ({ label, error, type = "text", className = "", icon, ...props }, ref) => {
-    // Force URL inputs to behave like text to avoid browser popups
-    const inputType = type === "url" ? "text" : type;
-
+  (
+    {
+      label,
+      error,
+      helperText,
+      icon,
+      iconPosition = "left",
+      className = "",
+      ...props
+    },
+    ref
+  ) => {
     return (
       <div className="w-full">
-        {/* Label */}
         {label && (
-          <label className="block text-sm font-medium text-text-soft mb-2">
+          <label className="block text-sm font-medium text-text mb-2">
             {label}
-            {props.required && <span className="text-danger ml-1">*</span>}
           </label>
         )}
-
-        {/* Input wrapper */}
         <div className="relative">
-          {/* Icon */}
-          {icon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-soft">
+          {icon && iconPosition === "left" && (
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-soft">
               {icon}
             </div>
           )}
-
-          {/* Input field */}
-          <input
+          <motion.input
             ref={ref}
-            type={inputType}
-            inputMode={type === "url" ? "url" : undefined}
+            whileFocus={{ scale: 1.01 }}
             className={`
-              w-full px-4 py-2 
-              ${icon ? "pl-10" : ""}
-              border border-border 
-              rounded-lg 
-              bg-surface 
-              text-text 
-              placeholder-text-soft
-              focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent
-              disabled:bg-bg-soft disabled:cursor-not-allowed
+              w-full px-4 py-3 rounded-xl border-2
+              ${icon && iconPosition === "left" ? "pl-10" : ""}
+              ${icon && iconPosition === "right" ? "pr-10" : ""}
+              ${error ? "border-danger" : "border-border"}
+              bg-bg text-text placeholder:text-text-soft
+              focus:outline-none focus:border-brand
               transition-all duration-200
-              ${error ? "border-danger focus:ring-danger" : ""}
+              disabled:opacity-50 disabled:cursor-not-allowed
               ${className}
             `}
             {...props}
           />
+          {icon && iconPosition === "right" && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-soft">
+              {icon}
+            </div>
+          )}
         </div>
-
-        {/* Error message */}
-        {error && <p className="mt-1 text-sm text-danger">{error}</p>}
+        {(error || helperText) && (
+          <p
+            className={`mt-2 text-sm ${
+              error ? "text-danger" : "text-text-soft"
+            }`}
+          >
+            {error || helperText}
+          </p>
+        )}
       </div>
     );
   }

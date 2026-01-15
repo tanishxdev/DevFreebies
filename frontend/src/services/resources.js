@@ -1,9 +1,5 @@
+// src/services/resources.js
 import api from "./api";
-
-/**
- * Resources service
- * Handles all resource-related API calls
- */
 
 // Get all resources with filters
 export const getResources = async (params = {}) => {
@@ -11,13 +7,13 @@ export const getResources = async (params = {}) => {
   return response;
 };
 
-// Get single resource by ID
+// Get single resource
 export const getResource = async (id) => {
   const response = await api.get(`/resources/${id}`);
   return response;
 };
 
-// Create new resource
+// Create resource
 export const createResource = async (resourceData) => {
   const response = await api.post("/resources", resourceData);
   return response;
@@ -35,14 +31,22 @@ export const deleteResource = async (id) => {
   return response;
 };
 
-// Upvote/downvote resource
+// Upvote resource
 export const upvoteResource = async (id) => {
   const response = await api.put(`/resources/${id}/upvote`);
   return response;
 };
 
-// Get all categories with counts
+// Get categories
 export const getCategories = async () => {
   const response = await api.get("/resources/categories");
   return response;
+};
+
+// Get user's resource stats
+export const getUserResourceStats = async () => {
+  const response = await api.get("/users/me");
+  return {
+    submittedCount: response.data?.submittedResources?.length || 0,
+  };
 };
