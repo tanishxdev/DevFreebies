@@ -45,6 +45,13 @@ export const getMyProfile = async (req, res) => {
       .populate("bookmarks", "title url category upvotes")
       .populate("submittedResources", "title url category upvotes");
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     res.json({
       success: true,
       data: user,
@@ -62,6 +69,20 @@ export const getMyProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { username, email, avatar, emailNotifications } = req.body;
+
+    if (email || username) {
+      const exists = await User.findOne({
+        $or: [{ email }, { username }],
+        _id: { $ne: req.user.id },
+      });
+
+      if (exists) {
+        return res.status(400).json({
+          success: false,
+          message: "Email or username already in use",
+        });
+      }
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -98,11 +119,15 @@ export const toggleBookmark = async (req, res) => {
     }
 
     // Check if already bookmarked
-    const bookmarkIndex = user.bookmarks.indexOf(resourceId);
+    const alreadyBookmarked = user.bookmarks.some(
+      (id) => id.toString() === resourceId
+    );
 
-    if (bookmarkIndex > -1) {
-      // Remove bookmark
-      user.bookmarks.splice(bookmarkIndex, 1);
+    if (alreadyBookmarked) {
+      user.bookmarks = user.bookmarks.filter(
+        (id) => id.toString() !== resourceId
+      );
+
       await user.save();
 
       res.json({
@@ -111,7 +136,6 @@ export const toggleBookmark = async (req, res) => {
         bookmarked: false,
       });
     } else {
-      // Add bookmark
       user.bookmarks.push(resourceId);
       await user.save();
 

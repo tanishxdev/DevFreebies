@@ -9,6 +9,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Import routes
+import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import resourceRoutes from "./routes/resources.js";
 import userRoutes from "./routes/users.js";
@@ -30,16 +31,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Welcome route
 app.get("/", (req, res) => {
   res.json({
-    message: "🚀 Welcome to DevFreebies API",
+    message: "Welcome to DevFreebies API",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth",
       resources: "/api/resources",
       users: "/api/users",
+      admin: "/api/admin",
     },
   });
 });
@@ -52,7 +55,7 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
 
@@ -61,7 +64,7 @@ app.use((err, req, res, next) => {
 
   res.status(statusCode).json({
     success: false,
-    message: message,
+    message,
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });

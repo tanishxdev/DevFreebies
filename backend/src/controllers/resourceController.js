@@ -31,8 +31,8 @@ export const getResources = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate("submittedBy", "username avatar")
-      // .lean();
+      .populate("submittedBy", "username avatar");
+    // .lean();
 
     const total = await Resource.countDocuments(query);
 
@@ -84,14 +84,26 @@ export const getResource = async (req, res) => {
   }
 };
 
-// Create resource
 export const createResource = async (req, res) => {
   try {
+    // 1. Per-user limit check (MAX 3)
+    const userResourceCount = await Resource.countDocuments({
+      submittedBy: req.user.id,
+    });
+
+    if (userResourceCount >= 3) {
+      return res.status(400).json({
+        success: false,
+        message: "You can submit a maximum of 3 resources",
+      });
+    }
+
+    // 2. Create resource
     req.body.submittedBy = req.user.id;
 
     const resource = await Resource.create(req.body);
 
-    // Add to user's submitted resources
+    // 3. Update user stats
     await User.findByIdAndUpdate(req.user.id, {
       $push: { submittedResources: resource._id },
       $inc: { contributionScore: 5 },
@@ -104,7 +116,15 @@ export const createResource = async (req, res) => {
   } catch (error) {
     console.error("Create resource error:", error);
 
-    // Handle mongoose validation errors (missing title, invalid url, etc)
+    // 4. Duplicate URL error (GLOBAL)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "This resource already exists",
+      });
+    }
+
+    // 5. Validation errors
     if (error.name === "ValidationError") {
       const errors = Object.values(error.errors).map((err) => err.message);
 
@@ -134,17 +154,40 @@ export const updateResource = async (req, res) => {
     }
 
     // Check ownership or admin
-    if (
-      resource.submittedBy.toString() !== req.user.id &&
-      req.user.role !== "admin"
-    ) {
+    const isOwner = resource.submittedBy.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to update this resource",
       });
     }
 
-    resource = await Resource.findByIdAndUpdate(req.params.id, req.body, {
+    // Allowed fields for update
+    const allowedFields = [
+      "title",
+      "description",
+      "url",
+      "image",
+      "category",
+      "tags",
+    ];
+
+    // Admin-only fields
+    if (isAdmin) {
+      allowedFields.push("isFeatured", "isVerified");
+    }
+
+    // Build safe update object
+    const updates = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    resource = await Resource.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
     });
@@ -219,7 +262,9 @@ export const upvoteResource = async (req, res) => {
     }
 
     // Check if already upvoted
-    const alreadyUpvoted = resource.upvotedBy.includes(req.user.id);
+    const alreadyUpvoted = resource.upvotedBy.some(
+      (id) => id.toString() === req.user.id
+    );
 
     if (alreadyUpvoted) {
       // Remove upvote

@@ -79,6 +79,7 @@ const resourceSchema = new mongoose.Schema(
       icon: String,
       screenshot: String,
       domain: String,
+      default: {},
     },
   },
   {
@@ -88,23 +89,48 @@ const resourceSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for faster queries
+// -------------------- INDEXES --------------------
+
+// Text search
 resourceSchema.index({ title: "text", description: "text" });
+
+// Filtering / sorting
 resourceSchema.index({ category: 1, upvotes: -1 });
 resourceSchema.index({ submittedBy: 1 });
 resourceSchema.index({ isFeatured: 1, createdAt: -1 });
 
-// Auto-set domain from URL
+// GLOBAL DUPLICATE PREVENTION (URL-based)
+resourceSchema.index({ url: 1 }, { unique: true });
+
+// -------------------- HOOKS --------------------
+
+// Auto-set domain from URL (on CREATE)
 resourceSchema.pre("save", function (next) {
-  if (this.url && !this.metadata?.domain) {
+  if (this.url && !this.metadata.domain) {
     try {
       const urlObj = new URL(this.url);
-      this.metadata = this.metadata || {};
       this.metadata.domain = urlObj.hostname;
     } catch (error) {
       // Invalid URL, skip
     }
   }
+  next();
+});
+
+// Auto-set domain from URL (on UPDATE)
+resourceSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+
+  if (update?.url) {
+    try {
+      const urlObj = new URL(update.url);
+      update.metadata = update.metadata || {};
+      update.metadata.domain = urlObj.hostname;
+    } catch (error) {
+      // Invalid URL, skip
+    }
+  }
+
   next();
 });
 

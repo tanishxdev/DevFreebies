@@ -31,11 +31,12 @@ export const RESOURCE_TAGS = [
   "cloud",
   "css",
   "html",
-  "hosting",
 ];
 
+// Default pagination limit (used across controllers)
 export const PAGINATION_LIMIT = 20;
 
+// User roles
 export const ROLES = {
   USER: "user",
   ADMIN: "admin",
