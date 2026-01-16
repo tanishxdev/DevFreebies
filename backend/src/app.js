@@ -1,9 +1,12 @@
+// app.js
+// Express app configuration (middlewares, routes, errors)
+
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 
-// Logging in development
-
+// Load environment variables ONLY in local development
+// Render already injects env vars in production
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
@@ -16,38 +19,44 @@ import userRoutes from "./routes/users.js";
 
 const app = express();
 
-// Middleware
+// -------------------- MIDDLEWARES --------------------
+
+// Enable CORS
+// CLIENT_URL comes from environment variables
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://dev-freebies-alpha.vercel.app"],
+    origin: [
+      "http://localhost:3000", // local frontend dev
+      process.env.CLIENT_URL,  // production frontend
+    ],
     credentials: true,
   })
 );
 
+// Parse incoming JSON requests
 app.use(express.json());
+
+// Parse URL-encoded form data
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
+// -------------------- ROUTES --------------------
+
 app.use("/api/auth", authRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Welcome route
+// Health / Welcome route
 app.get("/", (req, res) => {
   res.json({
     message: "Welcome to DevFreebies API",
     version: "1.0.0",
-    endpoints: {
-      auth: "/api/auth",
-      resources: "/api/resources",
-      users: "/api/users",
-      admin: "/api/admin",
-    },
   });
 });
 
-// 404 handler
+// -------------------- ERROR HANDLERS --------------------
+
+// 404 handler (no route matched)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -55,17 +64,16 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
+// Global error handler (centralized)
 app.use((err, req, res, next) => {
   console.error(err.stack);
 
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-
-  res.status(statusCode).json({
+  res.status(err.statusCode || 500).json({
     success: false,
-    message,
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    message: err.message || "Internal Server Error",
+
+    // Show stack trace ONLY in development
+    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
   });
 });
 
