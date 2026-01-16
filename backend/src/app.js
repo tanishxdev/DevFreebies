@@ -22,12 +22,12 @@ const app = express();
 // -------------------- MIDDLEWARES --------------------
 
 // Enable CORS
-// CLIENT_URL comes from environment variables
+// Allow both local frontend and production frontend
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", // local frontend dev
-      process.env.CLIENT_URL,  // production frontend
+      "http://localhost:3000",      // local frontend dev
+      process.env.CLIENT_URL,       // production frontend (Render/Vercel)
     ],
     credentials: true,
   })
