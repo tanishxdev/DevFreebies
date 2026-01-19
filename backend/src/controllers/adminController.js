@@ -33,7 +33,9 @@ export const approveResource = async (req, res) => {
       });
     }
 
+    // ✅ Approve only (do not feature)
     resource.isVerified = true;
+
     await resource.save();
 
     res.json({
@@ -50,7 +52,7 @@ export const approveResource = async (req, res) => {
   }
 };
 
-// Reject resource (simple delete approach)
+// Reject resource (delete)
 export const rejectResource = async (req, res) => {
   try {
     const resource = await Resource.findById(req.params.id);
@@ -76,7 +78,6 @@ export const rejectResource = async (req, res) => {
     });
   }
 };
-
 // Feature resource
 export const featureResource = async (req, res) => {
   try {
@@ -89,12 +90,22 @@ export const featureResource = async (req, res) => {
       });
     }
 
+    if (resource.isFeatured && resource.isVerified) {
+      return res.json({
+        success: true,
+        message: "Resource already featured",
+        data: resource,
+      });
+    }
+
+    resource.isVerified = true;
     resource.isFeatured = true;
+
     await resource.save();
 
     res.json({
       success: true,
-      message: "Resource featured",
+      message: "Resource approved and featured",
       data: resource,
     });
   } catch (error) {
@@ -106,7 +117,7 @@ export const featureResource = async (req, res) => {
   }
 };
 
-// Unfeature resource
+// Unfeature resource (KEEP APPROVED)
 export const unfeatureResource = async (req, res) => {
   try {
     const resource = await Resource.findById(req.params.id);
@@ -118,7 +129,9 @@ export const unfeatureResource = async (req, res) => {
       });
     }
 
+    // ✅ Only remove feature, keep verified
     resource.isFeatured = false;
+
     await resource.save();
 
     res.json({
