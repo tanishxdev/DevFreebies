@@ -65,7 +65,7 @@ const SubmitResource = () => {
       const stats = await resourcesService.getUserResourceStats();
       setUserStats({
         submittedCount: stats.submittedCount || 0,
-        limit: 3,
+        limit: user?.role === "admin" ? Infinity : 3,
       });
     } catch (error) {
       console.error("Error fetching user stats:", error);
@@ -134,7 +134,7 @@ const SubmitResource = () => {
       await resourcesService.createResource(resourceData);
 
       toast.success(
-        "Resource submitted successfully! It will be reviewed by our team."
+        "Resource submitted successfully! It will be reviewed by our team.",
       );
       navigate("/resources");
     } catch (error) {
@@ -178,7 +178,7 @@ const SubmitResource = () => {
           </div>
 
           {/* Submission Limit Indicator */}
-          {userStats.submittedCount > 0 && (
+          {user?.role !== "admin" && userStats.submittedCount > 0 && (
             <div className="mb-8 bg-surface border border-border rounded-2xl p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -380,7 +380,9 @@ const SubmitResource = () => {
                 <ul className="space-y-2 text-sm text-text-soft">
                   <li className="flex items-start gap-2">
                     <div className="mt-0.5">✓</div>
-                    <span>Resource must be completely free to use or have free tier</span>
+                    <span>
+                      Resource must be completely free to use or have free tier
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="mt-0.5">✓</div>
@@ -415,14 +417,16 @@ const SubmitResource = () => {
                   loading={submitting}
                   disabled={
                     submitting ||
-                    userStats.submittedCount >= userStats.limit ||
+                    (user?.role !== "admin" &&
+                      userStats.submittedCount >= userStats.limit) ||
                     !formData.title ||
                     !formData.description ||
                     !formData.url ||
                     !formData.category
                   }
                 >
-                  {userStats.submittedCount >= userStats.limit
+                  {user?.role !== "admin" &&
+                  userStats.submittedCount >= userStats.limit
                     ? "Submission Limit Reached"
                     : "Submit Resource for Review"}
                 </Button>

@@ -12,7 +12,9 @@ export const getResources = async (req, res) => {
     const { category, search, sort = "-createdAt", featured } = req.query;
 
     // Build query
-    let query = {};
+    let query = {
+      isVerified: true, // 🔒 public only sees approved
+    };
 
     if (category) {
       query.category = category;
@@ -56,7 +58,10 @@ export const getResources = async (req, res) => {
 // Get single resource
 export const getResource = async (req, res) => {
   try {
-    const resource = await Resource.findById(req.params.id)
+    const resource = await Resource.findOne({
+      _id: req.params.id,
+      isVerified: true,
+    })
       .populate("submittedBy", "username avatar")
       .populate("upvotedBy", "username");
 
@@ -82,28 +87,45 @@ export const getResource = async (req, res) => {
       message: "Server error",
     });
   }
+  /*************  ✨ Windsurf Command 🌟  *************/
 };
-
+// Create a new resource
+// Only available to users with less than 3 submitted resources
+// Admins are auto-approved
 export const createResource = async (req, res) => {
   try {
-    // 1. Per-user limit check (MAX 3)
-    const userResourceCount = await Resource.countDocuments({
-      submittedBy: req.user.id,
-    });
-
-    if (userResourceCount >= 3) {
-      return res.status(400).json({
-        success: false,
-        message: "You can submit a maximum of 3 resources",
+    // Check if user has submitted less than 3 resources
+    if (req.user.role !== "admin") {
+      const userResourceCount = await Resource.countDocuments({
+        submittedBy: req.user.id,
       });
+
+      if (userResourceCount >= 3) {
+        return res.status(400).json({
+          success: false,
+          message: "You can submit a maximum of 3 resources",
+        });
+      }
     }
 
-    // 2. Create resource
+    // Remove isVerified and isFeatured from request body
+    // as they should never be provided by the client
+    // 🔒 NEVER trust client
+    delete req.body.isVerified;
+    delete req.body.isFeatured;
+
+    // Set submittedBy to the current user ID
     req.body.submittedBy = req.user.id;
 
+    // Admin auto-approval
+    if (req.user.role === "admin") {
+      req.body.isVerified = true;
+    }
+
+    // Create the resource
     const resource = await Resource.create(req.body);
 
-    // 3. Update user stats
+    // Update the user's submitted resources and contribution score
     await User.findByIdAndUpdate(req.user.id, {
       $push: { submittedResources: resource._id },
       $inc: { contributionScore: 5 },
@@ -115,25 +137,6 @@ export const createResource = async (req, res) => {
     });
   } catch (error) {
     console.error("Create resource error:", error);
-
-    // 4. Duplicate URL error (GLOBAL)
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "This resource already exists",
-      });
-    }
-
-    // 5. Validation errors
-    if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors).map((err) => err.message);
-
-      return res.status(400).json({
-        success: false,
-        errors,
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -141,6 +144,7 @@ export const createResource = async (req, res) => {
   }
 };
 
+/*******  7cd8f766-2d65-4d4d-9fea-575412a16da0  *******/
 // Update resource
 export const updateResource = async (req, res) => {
   try {
@@ -153,7 +157,6 @@ export const updateResource = async (req, res) => {
       });
     }
 
-    // Check ownership or admin
     const isOwner = resource.submittedBy.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
 
@@ -164,7 +167,6 @@ export const updateResource = async (req, res) => {
       });
     }
 
-    // Allowed fields for update
     const allowedFields = [
       "title",
       "description",
@@ -174,18 +176,23 @@ export const updateResource = async (req, res) => {
       "tags",
     ];
 
-    // Admin-only fields
     if (isAdmin) {
       allowedFields.push("isFeatured", "isVerified");
     }
 
-    // Build safe update object
+    // ✅ DECLARE FIRST
     const updates = {};
+
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
     });
+
+    // ✅ Feature always implies approval
+    if (isAdmin && updates.isFeatured === true) {
+      updates.isVerified = true;
+    }
 
     resource = await Resource.findByIdAndUpdate(req.params.id, updates, {
       new: true,
@@ -263,7 +270,7 @@ export const upvoteResource = async (req, res) => {
 
     // Check if already upvoted
     const alreadyUpvoted = resource.upvotedBy.some(
-      (id) => id.toString() === req.user.id
+      (id) => id.toString() === req.user.id,
     );
 
     if (alreadyUpvoted) {
