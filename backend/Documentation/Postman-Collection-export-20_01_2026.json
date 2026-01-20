@@ -1,0 +1,781 @@
+{
+  "info": {
+    "_postman_id": "834c1517-273d-4d56-8bcd-37b31556dba5",
+    "name": "DevFreebies-API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "id": "09aafb42-52ec-4005-9220-1e7d2d39b932",
+      "name": "Admin Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin1@gmail.com\",\n  \"password\": \"password123\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/login",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "8bc4d625-1aef-4d1e-9d6d-e32017cbc30a",
+      "name": "Admin Pending Resources",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/resources/pending",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "resources",
+            "pending"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwZjc5OWQ1NTY5M2EzOGQwNzBmMyIsImlhdCI6MTc2ODQ5MzAxOCwiZXhwIjoxNzY5MDk3ODE4fQ.gHQ3bSrZ0LjBAcG8guaLW8faud_xUjmQ7xaRDPwB6jU",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "3829b79b-c5ff-40e5-8ee1-e6cc6a200a5b",
+      "name": "Admin Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin1\",\n  \"email\": \"admin1@gmail.com\",\n  \"password\": \"password123\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/register",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "20244397-bf35-46af-a883-45911730d9b0",
+      "name": "Approve Resource",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/resources/69690d7a9d55693a38d070db/approve",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "resources",
+            "69690d7a9d55693a38d070db",
+            "approve"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwZjc5OWQ1NTY5M2EzOGQwNzBmMyIsImlhdCI6MTc2ODQ5MzAxOCwiZXhwIjoxNzY5MDk3ODE4fQ.gHQ3bSrZ0LjBAcG8guaLW8faud_xUjmQ7xaRDPwB6jU",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "7939ac5b-e869-4467-80f7-8430b5a804bd",
+      "name": "Bookmark Resource",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Updated description\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/users/bookmark/69690d7a9d55693a38d070db",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "users",
+            "bookmark",
+            "69690d7a9d55693a38d070db"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "7be6f17b-c59b-4103-b0b7-df70eda6dee5",
+      "name": "Feature Resource",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/resources/69690d699d55693a38d070d7/feature",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "resources",
+            "69690d699d55693a38d070d7",
+            "feature"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwZjc5OWQ1NTY5M2EzOGQwNzBmMyIsImlhdCI6MTc2ODQ5MzAxOCwiZXhwIjoxNzY5MDk3ODE4fQ.gHQ3bSrZ0LjBAcG8guaLW8faud_xUjmQ7xaRDPwB6jU",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "8a27e5ea-6888-4ee6-8e56-e1f4c796714b",
+      "name": "Get All Resources (Public)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/resources",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "resources"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "ca4ab161-3694-4945-b3af-b437f32a1001",
+      "name": "Get Current User (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/auth/me",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "d438b14b-61e2-49d7-9834-8b58ea411c8a",
+      "name": "Get Featured Resources",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/resources",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "resources"
+          ],
+          "protocol": "http",
+          "query": [
+            {
+              "key": "featured",
+              "value": "true",
+              "disabled": false
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwZjc5OWQ1NTY5M2EzOGQwNzBmMyIsImlhdCI6MTc2ODQ5MzAxOCwiZXhwIjoxNzY5MDk3ODE4fQ.gHQ3bSrZ0LjBAcG8guaLW8faud_xUjmQ7xaRDPwB6jU",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "5e222cb3-dcbe-4732-8c45-6d4d2a3cb655",
+      "name": "Get My Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/users/me",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "users",
+            "me"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "6dea2557-6867-4022-8662-dbc741b5ec1d",
+      "name": "Get Pending Resources",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/resources/pending",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "resources",
+            "pending"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwZjc5OWQ1NTY5M2EzOGQwNzBmMyIsImlhdCI6MTc2ODQ5MzAxOCwiZXhwIjoxNzY5MDk3ODE4fQ.gHQ3bSrZ0LjBAcG8guaLW8faud_xUjmQ7xaRDPwB6jU",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "4626d84a-b457-4609-b640-5e775792dbec",
+      "name": "Get Single Resource",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/resources/69690d7a9d55693a38d070db",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "69690d7a9d55693a38d070db"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "83937bd8-8e47-4863-a929-d943c100b316",
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000",
+          "host": [
+            "localhost"
+          ],
+          "path": [],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "d8188a70-3b12-48d8-909a-320981c7315f",
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test1@gmail.com\",\n  \"password\": \"password123\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/login",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkxYTUyNmRmNTc1MDAyYTZlYmYyZCIsImlhdCI6MTc2ODQ5NTY5OCwiZXhwIjoxNzY5MTAwNDk4fQ.u-MztPa4-5jZquIs-9o_HsB687g9oEvCSnOUF6yPa4s",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "972f53f2-0715-451b-803d-410ecf6d4410",
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"test1\",\n  \"email\": \"test1@gmail.com\",\n  \"password\": \"password123\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/register",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "1fc51648-be8c-4ed5-a608-631e86b079f9",
+      "name": "RESOURCE (USER FLOW)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Free API Tools 2 \",\n  \"description\": \"Collection of free APIs for developers\",\n  \"url\": \"https://example.com\",\n  \"category\": \"apis\",\n  \"tags\": [\"api\", \"free\", \"backend\"]\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/resources",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "resources"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkxYTUyNmRmNTc1MDAyYTZlYmYyZCIsImlhdCI6MTc2ODQ5NTcyMCwiZXhwIjoxNzY5MTAwNTIwfQ.lp8ldXZ1TtFDi1ujvDv11ZdFdSWDWt-cwVajLTReZuU",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "60a197c7-07ab-46e1-9490-8817f3eaead9",
+      "name": "Update Own Resource",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Updated description\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/resources/69690d7a9d55693a38d070db",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "69690d7a9d55693a38d070db"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "51a30af7-df91-42db-9a9c-cddb0149b148",
+      "name": "Upvote Resource",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text",
+            "disabled": true,
+            "description": ""
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Updated description\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/resources/69690d7a9d55693a38d070db/upvote",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "69690d7a9d55693a38d070db",
+            "upvote"
+          ],
+          "protocol": "http"
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjkwYzg2OWQ1NTY5M2EzOGQwNzBkMSIsImlhdCI6MTc2ODQ5MjE2NywiZXhwIjoxNzY5MDk2OTY3fQ.7JZwNKHhvUGvFqpe3qlF3pyw1UxdF7vzt3stFHoTw0M",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    }
+  ]
+}
