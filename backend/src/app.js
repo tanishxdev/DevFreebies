@@ -26,11 +26,11 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",      // local frontend dev
-      process.env.CLIENT_URL,       // production frontend (Render/Vercel)
+      "http://localhost:3000", // local frontend dev
+      process.env.CLIENT_URL, // production frontend (Render/Vercel)
     ],
     credentials: true,
-  })
+  }),
 );
 
 // Parse incoming JSON requests
@@ -51,6 +51,15 @@ app.get("/", (req, res) => {
   res.json({
     message: "Welcome to DevFreebies API",
     version: "1.0.0",
+  });
+});
+
+// Health check (used by cron / uptime tools)
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
   });
 });
 
